@@ -16,6 +16,8 @@ public class PlayerController : MonoBehaviour
 
     [Header("Slide Variables")]
     private bool isSliding;
+    [SerializeField] private float slideCooldownCounter;
+    [SerializeField] private float slideCooldown;
     [SerializeField] private float slideSpeed;
     [SerializeField] private float timeSlideCounter;
     [SerializeField] private float timeSlide;
@@ -28,6 +30,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask whatIsGround;
     private bool isGrounded;
     private bool wallDetected;
+    private bool ceilingDetected;
+
+    [SerializeField] private Transform ceilingCheck;
+    [SerializeField] private float ceilingDistance;
 
     [SerializeField] private Transform wallCheck;
     [SerializeField] private Vector2 wallCheckSize;
@@ -52,24 +58,25 @@ public class PlayerController : MonoBehaviour
         {
             HorizontalMovement();
         }
-    
+
+        CheckCeiling();
         CheckGround();
         CheckWall();
         CheckInput();
         CheckAnimation();
         CheckSliding();
-    
-        Debug.Log(isSliding);
+
     }
 
     private void CheckSliding()
     {
-        if(timeSlideCounter < 0 || wallDetected)
+        if(timeSlideCounter < 0 && !ceilingDetected)
         {
             isSliding = false;
         }
         
-        timeSlideCounter -= Time.deltaTime;
+        timeSlideCounter -= Time.deltaTime;     
+        slideCooldownCounter -= Time.deltaTime;
     }
     
     private void HorizontalMovement()
@@ -88,11 +95,18 @@ public class PlayerController : MonoBehaviour
     {
         isSliding = true;
         timeSlideCounter = timeSlide;
+        slideCooldownCounter = slideCooldown;
     }
     private void CheckWall()
     {
         wallDetected = Physics2D.BoxCast(wallCheck.transform.position, wallCheckSize, 0, Vector2.zero,0, whatIsGround);
     }
+
+    private void CheckCeiling()
+    {
+        ceilingDetected = Physics2D.Raycast(ceilingCheck.transform.position, Vector2.up, ceilingDistance, whatIsGround);
+    }
+
     private void CheckAnimation()
     {
         anim.SetBool("isSlide", isSliding);
@@ -119,7 +133,7 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+        if (Input.GetKeyDown(KeyCode.LeftShift) && slideCooldownCounter < 0)
         {
             SlideCheck();
         }
@@ -143,6 +157,7 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x , transform.position.y - groundDistance));
+        Gizmos.DrawLine(ceilingCheck.position, new Vector2(transform.position.x, transform.position.y + ceilingDistance));
         Gizmos.DrawWireCube(wallCheck.position, wallCheckSize);
     }
 }
