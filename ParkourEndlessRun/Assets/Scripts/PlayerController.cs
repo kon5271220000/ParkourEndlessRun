@@ -22,6 +22,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float timeSlideCounter;
     [SerializeField] private float timeSlide;
 
+    [Header("Ledge Climb Variables")]
+    [SerializeField] private Vector2 offSet1;
+    [SerializeField] private Vector2 offSet2;
+    private Vector2 climbBegunPosition;
+    private Vector2 climbOverPosition;
+
+    private bool canGrab = true;
+    private bool canClimb;
+
     private bool playerUnlock;
     private bool canDoubleJump;
 
@@ -31,6 +40,7 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded;
     private bool wallDetected;
     private bool ceilingDetected;
+    [HideInInspector] public bool ledgeDetected;
 
     [SerializeField] private Transform ceilingCheck;
     [SerializeField] private float ceilingDistance;
@@ -65,6 +75,9 @@ public class PlayerController : MonoBehaviour
         CheckInput();
         CheckAnimation();
         CheckSliding();
+        LedgeClimb();
+
+        Debug.Log("is ledge detected: " + ledgeDetected);
 
     }
 
@@ -114,6 +127,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("isGround", isGrounded);
         anim.SetFloat("yVelocity", rb.velocity.y);
         anim.SetFloat("xVelocity", rb.velocity.x);
+        anim.SetBool("canClimb", canClimb);
     }
 
     private void CheckGround()
@@ -151,6 +165,26 @@ public class PlayerController : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, doubleJumpForce);
         }
         
+    }
+
+    private void LedgeClimb()
+    {
+        if (ledgeDetected && canGrab)
+        {
+            canGrab = false;
+            
+            Vector2 ledgePosition = GetComponentInChildren<LedgeDetect>().transform.position;
+
+            climbBegunPosition = ledgePosition + offSet1;
+            climbOverPosition = ledgePosition + offSet2;
+
+            canClimb = true;
+        }
+
+        if (canClimb)
+        {
+            transform.position = climbBegunPosition;
+        }
     }
 
     private void OnDrawGizmos()
