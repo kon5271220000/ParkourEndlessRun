@@ -21,7 +21,7 @@ public class LedgeDetect : MonoBehaviour
     {
         if (canDetected)
         {
-            player.ledgeDetected = Physics2D.OverlapCircle(transform.position, radius, whatIsGround);
+            //player.ledgeDetected = Physics2D.OverlapCircle(transform.position, radius, whatIsGround);
         }
 
     }

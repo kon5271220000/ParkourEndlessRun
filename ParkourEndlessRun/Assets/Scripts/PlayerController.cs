@@ -23,13 +23,19 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float timeSlide;
 
     [Header("Ledge Climb Variables")]
-    [SerializeField] private Vector2 offSet1;
-    [SerializeField] private Vector2 offSet2;
-    private Vector2 climbBegunPosition;
-    private Vector2 climbOverPosition;
+    public Transform ledgeDetect;
+    private bool isTouchingLedge;
+    [SerializeField] private float ledgeCheckDistance;
+    private bool ledgeDetected;
+    private bool canClimbLedge;
+    private Vector2 ledgePosBot;
+    private Vector2 ledgePos1;
+    private Vector2 ledgePos2;
+    [SerializeField] private float ledgeOffsetX1;
+    [SerializeField] private float ledgeOffsetX2;
+    [SerializeField] private float ledgeOffsetY1;
+    [SerializeField] private float ledgeOffsetY2;
 
-    private bool canGrab = true;
-    private bool canClimb;
 
     private bool playerUnlock;
     private bool canDoubleJump;
@@ -40,7 +46,7 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded;
     private bool wallDetected;
     private bool ceilingDetected;
-    [HideInInspector] public bool ledgeDetected;
+    //[HideInInspector] public bool ledgeDetected;
 
     [SerializeField] private Transform ceilingCheck;
     [SerializeField] private float ceilingDistance;
@@ -75,10 +81,35 @@ public class PlayerController : MonoBehaviour
         CheckInput();
         CheckAnimation();
         CheckSliding();
-        LedgeClimb();
+        CheckLedge();
+        //LedgeClimb();
 
-        Debug.Log("is ledge detected: " + ledgeDetected);
+        
 
+    }
+    
+    private void CheckLedgeClimb()
+    {
+        if(ledgeDetected && !canClimbLedge)
+        {
+            canClimbLedge = true;
+
+            ledgePos1 = new Vector2(Mathf.Floor(ledgePosBot.x + ledgeCheckDistance) - ledgeOffsetX1, Mathf.Floor(ledgePosBot.y + ledgeOffsetY1));
+            ledgePos2 = new Vector2(Mathf.Floor(ledgePosBot.x + ledgeCheckDistance) + ledgeOffsetX2, Mathf.Floor(ledgePosBot.y + ledgeOffsetY2));
+
+        }
+
+        if (canClimbLedge)
+        {
+            transform.position = ledgePos1;
+        }
+    }
+
+    private void FinishLedgeClimb()
+    {
+        canClimbLedge = false;
+        transform.position = ledgePos2;
+        ledgeDetected = false;
     }
 
     private void CheckSliding()
@@ -120,6 +151,17 @@ public class PlayerController : MonoBehaviour
         ceilingDetected = Physics2D.Raycast(ceilingCheck.transform.position, Vector2.up, ceilingDistance, whatIsGround);
     }
 
+    private void CheckLedge()
+    {
+        isTouchingLedge = Physics2D.Raycast(ledgeDetect.transform.position, Vector2.right, ledgeCheckDistance, whatIsGround);
+
+        if(wallDetected && isTouchingLedge && !ledgeDetected)
+        {
+            ledgeDetected = true;
+            ledgePosBot = wallCheck.transform.position;
+        }
+    }
+
     private void CheckAnimation()
     {
         anim.SetBool("isSlide", isSliding);
@@ -127,7 +169,7 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("isGround", isGrounded);
         anim.SetFloat("yVelocity", rb.velocity.y);
         anim.SetFloat("xVelocity", rb.velocity.x);
-        anim.SetBool("canClimb", canClimb);
+        anim.SetBool("canClimb", canClimbLedge);
     }
 
     private void CheckGround()
@@ -167,7 +209,7 @@ public class PlayerController : MonoBehaviour
         
     }
 
-    private void LedgeClimb()
+    /*private void LedgeClimb()
     {
         if (ledgeDetected && canGrab)
         {
@@ -185,13 +227,14 @@ public class PlayerController : MonoBehaviour
         {
             transform.position = climbBegunPosition;
         }
-    }
+    }*/
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x , transform.position.y - groundDistance));
         Gizmos.DrawLine(ceilingCheck.position, new Vector2(transform.position.x, transform.position.y + ceilingDistance));
+        Gizmos.DrawLine(ledgeDetect.position, new Vector2(transform.position.x  + ledgeCheckDistance, transform.position .y));
         Gizmos.DrawWireCube(wallCheck.position, wallCheckSize);
     }
 }
