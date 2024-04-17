@@ -9,6 +9,14 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
 
+    [Header("Speed info")]
+    [SerializeField] private float maxSpeed;
+    [SerializeField] private float speedMultiplier;
+    [SerializeField] private float mileStoneIncrease;
+    [SerializeField] private float speedMileStone;
+    [SerializeField] private float defaultSpeed;
+    [SerializeField] private float defaultMileStone;
+
     [Header("Move variables")]
     [SerializeField] private float speed = 5f;
     [SerializeField] private int jumpForce = 5;
@@ -60,6 +68,10 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+
+        speedMileStone = mileStoneIncrease;
+        defaultSpeed = speed;
+        defaultMileStone = speedMileStone;
     }
 
     // Update is called once per frame
@@ -75,6 +87,7 @@ public class PlayerController : MonoBehaviour
             HorizontalMovement();
         }
 
+        SpeedControl();
         CheckCeiling();
         CheckGround();
         CheckWall();
@@ -86,6 +99,26 @@ public class PlayerController : MonoBehaviour
 
         
 
+    }
+
+    private void SpeedReset()
+    {
+        speed = defaultSpeed;
+        speedMileStone = defaultMileStone;
+    }
+    private void SpeedControl()
+    {
+        if(transform.position.x > speedMileStone)
+        {
+            speedMileStone = speedMileStone + mileStoneIncrease;
+            speed *= speedMultiplier;
+            mileStoneIncrease *= speedMultiplier;
+
+            if(speed > maxSpeed)
+            {
+                speed = maxSpeed;
+            }
+        }
     }
     
     private void CheckLedgeClimb()
@@ -125,6 +158,11 @@ public class PlayerController : MonoBehaviour
     
     private void HorizontalMovement()
     {
+        if (wallDetected)
+        {
+            SpeedReset();
+        }
+
         if (isSliding)
         {
             rb.velocity = new Vector2(slideSpeed, rb.velocity.y);
@@ -234,7 +272,7 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position, new Vector2(transform.position.x , transform.position.y - groundDistance));
         Gizmos.DrawLine(ceilingCheck.position, new Vector2(transform.position.x, transform.position.y + ceilingDistance));
-        Gizmos.DrawLine(ledgeDetect.position, new Vector2(transform.position.x  + ledgeCheckDistance, transform.position .y));
+        Gizmos.DrawLine(ledgeDetect.position, new Vector2(ledgeDetect.position.x  + ledgeCheckDistance, ledgeDetect.position.y));
         Gizmos.DrawWireCube(wallCheck.position, wallCheckSize);
     }
 }
